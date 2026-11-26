@@ -1,14 +1,14 @@
 # movie-my-code
 
-A Claude skill that turns a software project into a short narrated film. The first half shows what the thing does and how the work flows through it; the second half shows how it was built (which agents, which rules and hooks, how changes get reviewed), when that's a story worth telling. The film is a Motion artifact, so it can be commented on like a document and Claude fixes the exact scene you point at. The Export button on the film gives you an MP4.
+This is a Claude skill that turns a software project into a short narrated film. The first half shows what the thing does and how the work flows through it; the second half shows how it was built (which agents, which rules and hooks, how changes get reviewed). The film is a Motion artifact, so it can be commented on like a document and Claude fixes the exact scene you point at. The Export button on the film gives you an MP4.
 
 ![movie-my-code: from a repo or its docs to a narrated film, one scene at a time](docs/demo.gif)
 
-It works from documents, from a repo, or both, in any language or stack. The result is meant to be talked over live, not watched in silence: one idea per scene, plain words a manager can repeat, boxes that fit their text, and nothing on screen that isn't true of the project.
+It works from documents, from a repo, or both, in any language or stack. The result is meant to be talked over live.
 
 ## What comes out
 
-A 1920 x 1080 film, usually 12 to 16 scenes and 4 to 5 minutes (the type caps it at 299 seconds). All the scenes share one look: paper cards on a tinted background, thin rails between them, one accent-coloured dot that travels the rails, and a dark window whenever something is a screen. The scenes are built from a handful of layouts that are known to work at this size: a numbered flow with small animated icons, cards in a row, a ladder, a loop, the real product screen with callouts, a list of lessons, a title card and an end card.
+A 1920 x 1080 film, usually 12 to 16 scenes and 4 to 5 minutes (the type caps it at 299 seconds). All the scenes share one look: paper cards on a tinted background, thin rails between them, one accent-coloured dot that travels the rails, and a dark window whenever something is a screen. But this can be personalized. The scenes are built from a handful of layouts that are known to work at this size: a numbered flow with small animated icons, cards in a row, a ladder, a loop, the real product screen with callouts, a list of lessons, a title card and an end card.
 
 ## What you need
 
@@ -22,7 +22,7 @@ Claude with the Motion artifact type, which means the Claude app on web or deskt
 
 ## How to ask for a film
 
-There's no config file. The settings are the sentences in your request. Here's the request used for testing, for a made-up project called Inbox Triage. Each line sets one thing; swap in your own.
+In this Project there's no config file. The settings are the sentences in your prompt. Here's the request used for testing, with example project called Inbox Triage. Each line sets one thing that you can swap in your own.
 
 ```text
 Make a video presenting our project "Inbox Triage" to the leadership team.          (1) project and audience
@@ -44,7 +44,7 @@ What each line does, and where it ends up if you ever want to edit the film by h
 | (5) | numbers | the only figures that may appear, always marked "measured so far" | the dashed note card in a flow scene, or a short scene of their own | no numbers at all |
 | (6) | connections | one style for every link: plain lines, dashed, or arrowheads; and what travels them: a dot, a comet, a pulse along the rail, or nothing | `W.rail` and `W.signal` in `shared.js`, defined once | plain lines and the dot |
 
-A blank one to fill in:
+A blank example for you to fill in:
 
 ```text
 Make a video presenting <project> to <audience>.
@@ -57,7 +57,7 @@ Connections: <plain lines | dashed | arrows>, <traveling dot | comet | pulse | n
 
 ## When something's wrong
 
-Something will be. Two ways to get it fixed.
+And for sure something will be :) Two ways to get it fixed.
 
 The quickest: open the film, pause where the problem is, click on it and write a comment the way you'd write it to a colleague. "This scene is too fast." "Why does the dot stop here?" "This box covers text." "Remove the name." The comment carries the time and the spot in the frame. Claude works out which scene that is (by adding up the `dur` values), finds the element, changes that and nothing else, and answers in the thread in whatever language you wrote. If the fix moves or retimes a scene, the anchors of any later comments shift too; the reply will say so.
 
@@ -69,7 +69,7 @@ Before handing a fix back, the skill renders the changed scene outside the playe
 
 ## What it costs
 
-Numbers from the test runs. Each was a fresh agent with nothing but the skill, in a Claude session with the Motion type. Yours will differ with the model, the repo and how many scenes you end up with.
+Each was a fresh agent with nothing but the skill in a Claude session with the Motion type. Yours will differ with the model, the repo and how many scenes you end up with.
 
 | Run | Result | Tokens | Time |
 |---|---|---|---|
@@ -77,7 +77,7 @@ Numbers from the test runs. Each was a fresh agent with nothing but the skill, i
 | Full film from a real repo (12 Python modules, 230 KB of code and docs) | 10 scenes, 3:56 | about 355k | about 23 min, 42 tool calls |
 | One fix from a comment on the film | one scene retimed, one box moved | about 100k | about 6 min |
 
-Where it goes: roughly 35k per film on the Motion type's own instruction pages, read once; 10 to 20k per scene written; a product-screen scene costs about double a flow scene because the real interface gets rebuilt from its code. A fix should cost 30 to 60k if only `scenes.json` and the one scene get re-read, which is what the skill now says to do. Listing the whole `modules` collection dumps every scene at once (about 25k) and is only worth it when a scene is missing. The cheapest film is the one asked for in a single message with all six lines filled in. Every open question is another round trip.
+Where it goes: roughly 35k per film on the Motion type's own instruction pages, read once; 10 to 20k per scene written; a product-screen scene costs about double a flow scene because the real interface gets rebuilt from its code. A fix should cost 30 to 60k if only `scenes.json` and the one scene get re-read, which is what the skill now says to do. Listing the whole `modules` collection dumps every scene at once (about 25k) and is only worth it when a scene is missing. The cheapest film is the one asked for in a single message with all six lines filled in.
 
 ## What's in here
 
@@ -94,7 +94,7 @@ movie-my-code/
 
 ## How it was tested
 
-The two cases under `evals/` were run by fresh agents that only had the skill. One built a whole film for a made-up project from a short description, the other applied a fix from a comment anchored at a time on the film. Both passed their graders. A third run pointed the skill at a real repo, a small Python job-search agent with no agent tooling and no measured numbers, and asked for a film in Italian for people who aren't engineers. The agent read the repo in the order the skill gives, dropped the second half and the numbers scene on its own, rebuilt the project's control panel from its page code, and labelled the example data on screen. It also came back with 24 notes on things in the skill that were unclear or contradicted the Motion type's own pages. Those are all folded into this version. With Claude Code, `claude plugin eval` runs the two cases.
+The two cases under `evals/` were run by fresh agents that only had the skill. One built a whole film for a made-up project from a short description, the other applied a fix from a comment anchored at a time on the film. Both passed their graders. A third run pointed the skill at a real repo, a small Python job-search agent with no agent tooling and no measured numbers, and asked for a film in Italian for people who aren't engineers. The agent read the repo in the order the skill gives, dropped the second half and the numbers scene on its own, rebuilt the project's control panel from its page code, and labelled the example data on screen. It also came back with 24 notes on things in the skill that were unclear or contradicted the Motion type's own pages. Those are all folded into this version with Claude Code, `claude plugin eval` runs the two cases.
 
 ## License
 
