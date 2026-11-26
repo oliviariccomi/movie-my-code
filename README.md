@@ -60,7 +60,28 @@ Numbers measured so far: <only what was actually measured, or nothing>.
 Connections: <plain lines | dashed | arrows>, <traveling dot | comet | pulse | nothing>.   optional
 ```
 
-To change something later, comment on the film at the moment you mean ("this scene is too fast", "this box covers text") or ask in chat; the skill changes the one place that parameter lives and keeps everything else stable.
+## Fixing the film
+
+The first cut is rarely the last. Two ways to ask for a change:
+
+- **Comment on the artifact.** Open the film, pause at the moment you mean, click the thing and write the comment in your own words ("this scene is too fast", "why does the dot stop here", "this box covers text", "remove the name"). The comment carries the time and the position in the frame; the skill maps the time to a scene by summing the `dur` values in `scenes.json`, finds the element from the position, changes only that, keeps every id stable, and replies in the comment's thread in the language you wrote it in. If a change moves or retimes a scene, every later comment anchor shifts, and the reply says so.
+- **Ask in chat.** Same effect, useful for changes that span the whole film ("plain lines everywhere", "shorter by thirty seconds", "switch to our new palette").
+
+What typical asks turn into: "too fast" is a longer scene and wider spacing of entrances, never faster motion; "too much empty space" is bigger text and vertical centering, never a smaller box; "overlaps" or "covers text" is the box moved to an empty area and the leader re-routed; "remove X" is X removed everywhere it appears, with a note of where else it still shows; "the dot stops" is the loop kept turning until the cut. After any retiming the skill re-sums the durations and keeps the total under 299 s by trimming holds at the ends of the longest scenes, never the middles.
+
+Before handing a revision back, the skill renders the changed scene outside the player (`scripts/preview.py`) and checks two things a reading of the code misses: a drawing left at the stage origin and text blocks that overlap. If you prefer to edit yourself, the table above says where each parameter lives: `dur` and `desc` per scene in `scenes.json`, arrival times in the `S = [...]` array at the top of each scene module, the four colors in the first line of `base.css`, every rail and signal in `W.rail` and `W.signal` in `shared.js`.
+
+## What it costs
+
+Measured on the test runs, each by a fresh agent with only the skill, in a Claude session with the Motion type (your figures will differ with the model, the repo and the number of scenes):
+
+| Run | Result | Tokens | Time |
+|---|---|---|---|
+| Complete film from a one-paragraph description (invented project) | 14 scenes, 4:28 | about 320k | about 25 min |
+| Complete film from a real repository (12 Python modules, 230 KB of code and docs) | 10 scenes, 3:56 | about 355k | about 23 min, 42 tool calls |
+| One revision from a comment anchored on the film | one scene retimed and one box moved | about 100k | about 6 min |
+
+Of each full run about 35k tokens are the Motion type's own pages, read once per film, and 10 to 20k go to each scene written; a product-screen scene costs about twice a flow scene, because the real interface is rebuilt from its code. A revision costs 30 to 60k when only `scenes.json` and the one scene are re-read, which is what the skill now says to do; listing the whole `modules` collection returns every scene at once (about 25k) and is for a missing scene only. The cheapest film is the one asked for in a single request with all the parameters above: every open question is a round trip.
 
 ## Layout
 
