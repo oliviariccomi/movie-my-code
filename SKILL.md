@@ -30,11 +30,13 @@ so a later change touches one line:
 | Total length | "under N minutes", "keep it short" | the `dur` of each scene in `scenes.json`, in seconds; the film is their sum, capped at 299 | 4 to 5 minutes narrated, 2 to 3 with a score |
 | Pacing | "I will talk over it live" or "it plays on its own" | the arrival times at the top of each scene module (`S = [...]` for a flow, `T = {...}` for a screen, hop interval for a ladder) and the scene's `dur` | live voice: content scenes 20 to 30 s, no score |
 | Music | "no music" / "with music" | the score module (`modules/score.js`), present or absent | none when narrated |
-| Audience and language | "for management, in English" | the words on every card | ask |
+| Audience and language | "for management, in English" | the words on every card; `lang` in `scenes.json` and each scene's one-line `desc`, both in the film's language | ask; when nobody can answer, the language the request is written in, said in the reply |
+| Connections | "plain lines", "arrows", "dashed", "no traveling dot", "a comet instead of a dot" | `W.rail` and `W.signal` in `shared.js`, one definition each, so every rail and every signal in the film changes together | plain lines and one accent dot that travels them |
 
 To change a parameter after the film exists, edit the one place named above and keep ids
 stable: a longer scene is its `dur` plus wider spacing in its `S` array; a new palette is
-the four hex values only. The stage is always 1920 by 1080 at 30 fps.
+the four hex values only. The stage is 1920 by 1080; `"fps": 30` in `scenes.json` is this
+skill's choice for a light export (the type's own examples use 60).
 
 ## 1. Gather the material before any design
 
@@ -48,9 +50,12 @@ the interfaces or adapters at the edges (external services, storage, models), wh
 become the design rules; the configuration and the data files, which say what is
 switchable; the tests and any evaluation scripts, which are the only source of numbers;
 and the agent tooling (.claude or similar folders, hooks, commands, CI gates), which
-becomes part two. Name components on screen by what they do, not by their class or file
-name, and keep the real names for the small line under the title. Then write down, for
-yourself, the facts the film may state:
+becomes part two. One exception to "stop when the picture is clear": when the product
+has a screen the film will show, read its page or component files and their design tokens
+in full, because the screen scene needs every size, color and label. Name components on
+screen by what they do, not by their class or file name; the real names go in the small
+line under the title only for a technical audience, and nowhere for end users. Then write
+down, for yourself, the facts the film may state:
 
 - what the product does, for whom, and the one sentence that frames it (for anything
   clinical, legal or safety-related: the tool supports, the human decides; say it more
@@ -60,7 +65,9 @@ yourself, the facts the film may state:
 - the three or four design rules that shape the architecture, in plain words
 - numbers that were actually measured (how many cases tested, seconds, cost); none of
   these are invented, rounded up or extrapolated, and the film says "tested so far on N"
-  rather than implying a finished evaluation
+  rather than implying a finished evaluation. Counts that appear in README anecdotes,
+  docstrings or config comments ("one run collected 79 postings") are not measurements
+  either; they stay out
 - if the project was built with AI agents: which agents, what each does well, where the
   knowledge lives (rules file, decision log, wiki), the enforcement ladder (rule, scoped
   rule, prompt, deny rules and hooks, server-side policy), the hooks and what each one
@@ -69,7 +76,9 @@ yourself, the facts the film may state:
 
 Ask the user only what changes the film and only they know: audience and language,
 whether they narrate live (then no music and slower pacing), and the brand colors if there
-is no design system. Decide the rest yourself and say what you decided.
+is no design system. When the request already answers these, or nobody can answer (a
+subagent run, an unattended session), do not ask: decide, say the picks in one line of the
+reply, and go on. Decide the rest yourself and say what you decided.
 
 Leave out, whatever the docs contain: ticket and pull-request numbers, branch names,
 commit hashes, class and file names in titles (they may appear in the small line under a
@@ -107,7 +116,11 @@ showing; otherwise end part 1 with results and the end card)
 This list is the maximum, not a form to fill: show only the rungs, agents, hooks and
 commands the project really has, and drop a scene when nothing true fills it (a project
 with three controls gets a three-step ladder; a project with no commands has no commands
-scene). Every scene makes one point. If a scene needs two, split it. If a point needs a
+scene). A project with no part two and no numbers makes an honest film of 8 to 10 scenes
+under 4 minutes; do not pad it. When the audience are the product's users rather than
+management, two part-one scenes earn their place instead: how to start (cards in a row
+with small drawings) and what to know, the limits (the lessons layout). Every scene
+makes one point. If a scene needs two, split it. If a point needs a
 table, it is a document, not a film.
 
 ## 3. Pacing for a live voice
@@ -124,6 +137,10 @@ The presenter reads the screen a beat before speaking, so nothing can rush:
 - the camera moves only between readings: a push or pan of 1.2 to 1.6 seconds, with no
   text appearing while it moves, and callouts appear only once it has stopped and
   disappear before it moves again
+- on a product screen, hold the whole window about 4 seconds before the first push: a
+  presenter needs the establishing view. This deliberately overrides recreate-ui's rule
+  of never sitting on a whole window beyond 1.2 s, which is written for films that play
+  on their own
 
 No music when the user narrates live. Otherwise a quiet wordless score, dropped the moment
 the user says so.
@@ -136,6 +153,13 @@ and a dark variant of the card for anything that is a screen or a terminal. Four
 role order (ground, main, second as ink, accent), taken from the user's brand or design
 system; greys are mixes of those four, never pure black or white. Typeface from the brand
 if Google Fonts has it; Helvetica or Arial map to Inter (say so once).
+
+Connections are one style for the whole film, defined once: `W.rail` draws every link and
+`W.signal` the one thing that travels them. The default is a plain line and an accent dot;
+the user may ask for arrowheads, dashed rails, a comet (a dot with a fading tail), a pulse
+that runs along the rail, or no traveling signal at all. `references/world.md` gives each
+variant as a drop-in replacement of those two functions; change them there, never in a
+scene, so the film never mixes two styles.
 
 Scene archetypes, with the geometry that is known to work on a 1920 by 1080 stage, are in
 `references/scenes.md`; the shared kit (cards, windows, rails, signal, tags, camera,
@@ -160,7 +184,11 @@ scene. The archetypes:
   station labels outside the track, one card in the middle for the rule the loop obeys.
 - Product screen: the real interface, lifted from code or screenshots when available,
   otherwise drawn plainly from the user's description at 1440 by 900 inside a dark window;
-  the camera pushes to the part in use; the interaction (typing, a button lighting, a
+  the camera pushes to the part in use, zoomed so that the product's smallest UI text
+  reads at 24 px or more on stage (zoom = 24 / smallest font size in px, usually 1.5 to
+  1.9), and centred off to one side so an empty strip of the page stays in frame for the
+  callouts; a page taller than the window scrolls by a translateY on its main column
+  (section 5 of `references/scenes.md`); the interaction (typing, a button lighting, a
   state chip changing) is driven from `t`; explanatory callouts with a leader line.
 - Lessons: numbered rows, a 44 px claim and a 30 px evidence line, one every 5 seconds.
 - Title and end: words on the left, the solution drawing on the right, never overlapping.
@@ -184,7 +212,11 @@ Body text in cards is 24 px, titles 27 to 30 px, chips 20 px; a reader on a phon
 preview must still read them.
 
 A label never overflows its bar, a chip never meets a badge, a line of words never wraps
-where it cannot grow. Keep words out of SVG (the page's retype tool needs HTML text), and
+where it cannot grow. Distances are part of the proportion: never less than 40 px between
+two text blocks that do not belong together (a station label and the next one, a label
+and a heading), at least 50 px between the lowest text of a scene and its footer line, and
+the footer itself no lower than y 1000 so the bottom margin stays. Count wrapped lines
+before fixing these: a label that wraps to two lines is 30 px taller than planned. Keep words out of SVG (the page's retype tool needs HTML text), and
 give every group of lines one flow container so that a wrapped line pushes the next one
 down instead of overlapping it.
 
@@ -194,9 +226,16 @@ A callout is a card with a 6 px accent left border and a light translucent backg
 24 px text, placed in an empty area of the screen it explains, never over text, with a
 3 px accent leader line ending in a 7 px dot next to the thing it explains. Route the
 leader through paddings and gutters (the margin inside a panel, the gap between two
-panels), never across a label or a button. Compute positions in stage space for each
-camera state (stage x = 960 + (sceneX - cameraX) * zoom, likewise for y) and check the
-rectangle of every text block under that camera before placing. Callouts fade in after the
+panels), never across a label or a button. The left-border card is deliberate: recreate-ui's
+content rules count left-border accents among the tropes to avoid in UI, but a callout is
+an annotation laid over the UI, not part of it, and the border is what ties it to its
+leader; only if the product itself uses the same device switch to a plain paper chip with
+an underline-and-dot leader. Compute positions in stage space for each camera state (stage
+x = 960 + (sceneX - cameraX) * zoom, likewise for y) and check the rectangle of every text
+block under that camera before placing. The practical move is to choose the camera for
+the callout: at zoom 1.6 the frame holds 1200 by 675 window px, so centring on a 900 px
+wide panel leaves a 300 px (480 stage px) column of page beside it; put the callouts there
+and run the leader through the gap at the end of the nearest row of controls. Callouts fade in after the
 camera stops, stay at least 4 seconds at full opacity (fade-in and fade-out not counted),
 fade out before the next camera move. When a callout is boxed in between a camera stop
 and the next move, the honest lever is to delay the move and everything after it, even if
@@ -205,26 +244,50 @@ visible time to fit.
 
 ## 7. Building the film with the Motion type
 
-Follow the Motion type's own instructions: list the types, describe the Motion type, read
-its questions page, then rough-cut, finalize, motion and film-api (and recreate-ui when
-the film shows a real product). These pages are long, about 25k tokens together, and they
-are the authority on how a scene is written; budget for them. Ask the style form once,
-unless the request already settles style, colors and length (then the type's own rule
-says no form: decide, say your picks in a line and go on). Create the film; first batch
-with `scenes.json` at stage rough, `base.css` and the script; then `shared.js`, one `set`
-per scene in film order, then `scenes.json` at stage final, with a score only if the film
-is not narrated. The type's default length is 10 to 30 seconds; a narrated project film
-is the "asked for more" case, so write the real durations (section 3) into the first
-batch's `scenes.json` from the start and keep the total under 300. Beyond those
-mechanics:
+Follow the Motion type's own instructions, in this order: list the types; describe the
+Motion type once (its instruction page comes back a second time from the create call, so
+it is read twice, never three times); read its questions page; create the film; then
+rough-cut, finalize, motion and film-api in one go, and recreate-ui when the film shows a
+real product. These pages cost about 35k tokens together (the instruction page twice, the
+questions, the four build pages, recreate-ui, the server's own notes); budget for them.
+The style form: ask it once when something is open and someone can answer; when the
+request already settles style, colors and length, or nobody can answer (a subagent, an
+unattended run), take the type's own "neither" branch: decide, say the picks in one line,
+go on. The questions page's length row offers 30 seconds at most; a narrated project film
+is the "asked for more" case, so write the real durations (section 3) into `scenes.json`
+from the first batch and keep the total under 300.
+
+The writes, as rough-cut asks: first batch `film/meta`, `scenes.json` at stage rough
+(with `lang` and a one-line `desc` per scene in the film's language), `base.css` in its
+short form (the first line with the four colors, and the five base classes) and the
+script; second batch the whole `base.css` from `references/world.md` with its ifVersion
+and `shared.js`; then one set per scene in film order; last, `scenes.json` at stage
+final, with a score only if the film is not narrated. One db_write is capped at 64 KB
+(a product-screen scene runs to about 17 KB; keep SVG light). Beyond those mechanics:
 
 - put the four colors, the tones mixed from them and the type scale in `base.css`; put
   every drawing that recurs (cards, windows, rails, signal, tags, camera helper) in
   `shared.js` so that scenes stay short
 - each scene is a pure function of `t`: entrances are `eo(seg(t, t0, t0 + 0.6))`, lights
-  are a symmetric pulse around the arrival, the signal's position is `along(points, q)`
+  are a symmetric pulse around the arrival, the signal's position is `along(points, q)`;
+  every point a render needs (a station, a rail end) is computed at init and kept in the
+  scene's state, because film-api forbids reading positions back from the DOM in render
 - sibling cards share one geometry constant; change the constant, not the cards
+- an SVG group moves only through `setAttribute('transform', …)`; `style.transform` is
+  for HTML `.words` blocks. A CSS transform on a group overrides its `transform`
+  attribute and sends the drawing to the stage origin (a bulletin drawn at (0,0) in a
+  real review came from exactly this). When a group needs an entrance slide, nest the
+  positioned group inside an outer one and animate the outer
+- before stage final, check every scene with a drawing at two moments (just after its
+  last entrance and at its end) for anything at the origin, outside its card, or over
+  words: save `base.css`, `shared.js` and the scene from the database to files and run
+  `scripts/preview.py --css base.css --shared shared.js --scene scene-x.js --id x --at 11 24`,
+  which screenshots `render(t)` with a stub kit and warns when something sits at (0,0)
+  or when two text blocks overlap (a section placed over the next one's heading, a
+  callout over a label); it costs a minute and catches what no reading of the code does
 - keep SVG light (a few hundred elements per scene) and filters off large areas
+- when you lift a real screen, keep recreate-ui's `SOURCES.md` (file and line per
+  surface) in the working folder; it is a working note, not a deliverable
 - never render stills or video yourself; the film's page exports the MP4
 
 ## 8. The review loop
@@ -240,7 +303,10 @@ and wider spacing of entrances, not faster motion; "too much empty space" means 
 text and vertical centering, not a smaller box; "overlaps" means move the box to an empty
 area and re-route the leader; "remove X" means remove it everywhere it appears and say
 where else it still appears. After any retiming, re-sum the durations and keep the total
-under the cap by trimming the holds at the ends of the longest scenes.
+under the cap by trimming the holds at the ends of the longest scenes. Read `scenes.json`
+alone with db_get to map an anchor; listing the `modules` collection returns every
+document whole (about 25k tokens) and is for a missing scene only. For a one-line fix,
+db_str_replace with the document's ifVersion is cheaper than rewriting the scene.
 
 ## 9. Delivery
 

@@ -35,17 +35,19 @@ I will talk over it live, in English, no music, under five minutes.             
 Brand colors: #F2F4F7 (ground), #1B2A49 (main), #10141C (ink), #F2A900 (accent).    (3) colors
 Material: README.md, docs/ARCHITECTURE.md, AGENTS.md, and the repo itself.          (4) material
 Numbers measured so far: 120 real emails, 4 s each, about 0.004 USD each.           (5) numbers
+Connections: plain lines with a traveling dot.                                      (6) connections, optional
 ```
 
 What each line does, and where it ends up in the film:
 
 | Line | Parameter | What it changes | Where it lands in the film's code | If you leave it out |
 |---|---|---|---|---|
-| (1) | project and audience | the framing sentence, the words on every card, the language | the text of each scene module | Claude asks |
+| (1) | project and audience | the framing sentence, the words on every card, the language | the text of each scene module; `lang` in `scenes.json` | Claude asks; when nobody can answer, it uses the language the request is written in and says so |
 | (2) | pacing, language, music, length | "live" means 20 to 30 s per scene and no score; "plays on its own" means shorter scenes and a quiet score; the limit sets the total | `dur` of each scene in `scenes.json` (the film is their sum), the arrival times `S = [...]` at the top of each scene module, the score module present or absent | live, no music, 4 to 5 minutes |
 | (3) | colors | the four brand colors, in role order: ground, main, ink, accent; every other tone is mixed from them | the first line of `base.css`; `palettes` and `background` in `scenes.json` | Claude asks once in the Motion style form |
 | (4) | material | what the film is allowed to say; from a repo, Claude reads README and docs, agent rules files, entry points, interfaces, config, tests and the agent tooling, in that order | the content of every scene | Claude asks for it |
 | (5) | numbers | the only figures the film may show, marked "measured so far" | the dashed note card in a flow scene, or a short scene of their own | no numbers in the film |
+| (6) | connections | the one style of every link between cards: plain lines (default), dashed, arrowheads; and what travels them: an accent dot (default), a comet, a pulse along the rail, or nothing | `W.rail` and `W.signal` in `shared.js`, defined once for the whole film | plain lines and the traveling dot |
 
 A blank version to fill in:
 
@@ -55,6 +57,7 @@ Make a video presenting <project> to <audience>.
 Brand colors: <ground> (ground), <main> (main), <ink> (ink), <accent> (accent).   or: use our design system
 Material: <files, folders, or the repository>.
 Numbers measured so far: <only what was actually measured, or nothing>.
+Connections: <plain lines | dashed | arrows>, <traveling dot | comet | pulse | nothing>.   optional
 ```
 
 To change something later, comment on the film at the moment you mean ("this scene is too fast", "this box covers text") or ask in chat; the skill changes the one place that parameter lives and keeps everything else stable.
@@ -67,13 +70,14 @@ movie-my-code/
 ├── references/
 │   ├── world.md          base.css and shared.js: the kit every scene uses
 │   └── scenes.md         the scene archetypes as code, with their timing tables
+├── scripts/preview.py    screenshots one scene outside the player with a stub kit, and warns when a drawing sits at the origin
 ├── evals/                two test cases with graders (a film from a description; a revision from an anchored comment)
 └── docs/demo.gif         the animation above
 ```
 
 ## Testing
 
-The two cases under `evals/` were run with fresh agents that had only the skill: one built a complete film for an unrelated project from a short description, the other applied a revision from a comment anchored at a time on the artifact. Both passed all graders. With Claude Code, `claude plugin eval` runs the same cases.
+The two cases under `evals/` were run with fresh agents that had only the skill: one built a complete film for an invented project from a short description, the other applied a revision from a comment anchored at a time on the artifact. Both passed all graders. A third run took a real Python repository (a personal job-search agent with no agent tooling and no measured numbers) and a request in Italian for a non-technical audience: the agent read the repo in the skill's order, dropped part two and the numbers scene on its own, rebuilt the product's control panel from its page code, and labelled the example data on screen. Its 24 remarks on unclear or contradictory passages are folded into this version. With Claude Code, `claude plugin eval` runs the two cases.
 
 ## License
 

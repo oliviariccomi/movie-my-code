@@ -25,7 +25,7 @@ plain lines between consecutive cards, the vertical one from column 3 down.
 ```js
 const { seg, eo, eio, eob, lerp, TextFx } = kit;
 const CX = [100, 690, 1280], RY = [260, 560], BW = 540, BH = 220;
-const STEPS = [ /* { label: 'Short title', sub: 'One sentence a manager can repeat, under 90 characters' } × 5 */ ];
+const STEPS = [ /* { label: 'Short title', sub: 'One sentence a manager can repeat, under 75 characters (three lines of 24 px Inter in 350 px)' } × 5 */ ];
 const POS = [[0, 0], [0, 1], [0, 2], [1, 2], [1, 1]];
 const S = [0.8, 4.6, 8.4, 12.2, 16.0];                       // arrival of each step
 const RAILS = [[[640, 370], [690, 370]], [[1230, 370], [1280, 370]], [[1550, 480], [1550, 560]], [[1280, 670], [1230, 670]]];
@@ -95,6 +95,12 @@ var(--tint2)` whose border turns accent as each lands. A wide bar below (100, 74
 1 + 6i seconds, its lines every 0.9 s; bar at 24.5; footer at 27 in a 29-second scene.
 
 ```js
+// init, per card c (x from the column, t = 1 + 6i): the block, then one words group
+svg += W.block('ag-b' + i, c.x, 230, 400, 470);
+words += W.tag('ag-w' + i, c.x + 32, 262, 336, '<p class="chip" style="background:var(--tint2);color:var(--second)">' + c.role + '</p><p class="t2" style="font-size:29px">' + c.name + '</p>' +
+  c.lines.map((l) => '<p class="cap2 ag-l" style="padding-left:18px;border-left:3px solid var(--tint2)">' + l + '</p>').join(''), 'gap:14px');
+// bind: c.does = [...q('.ag-w' + i).querySelectorAll('.ag-l')]
+// render: the card enters like a flow card (opacity and a 22 px slide); then its lines:
 c.does.forEach((el, i) => { const b = eo(seg(t, c.t + 1.0 + i * 0.9, c.t + 1.5 + i * 0.9)); el.style.opacity = b; el.style.transform = 'translateX(' + lerp(-12, 0, b).toFixed(1) + 'px)'; el.style.borderLeftColor = b > 0.99 ? 'var(--accent)' : 'var(--tint2)'; });
 ```
 
@@ -119,20 +125,25 @@ const px = lerp(a.x + 170, b.x + 170, e), py = lerp(a.y - 40, b.y - 40, e) - (i 
 
 ## 4. Loop with a token on a curved track
 
-Track: `M400 260 H1520 Q1660 260 1660 400 V720 Q1660 860 1520 860 H400 Q260 860 260 720
-V400 Q260 260 400 260 Z`. The token's path samples the four corners, so it never cuts them:
+Track: `M400 240 H1520 Q1660 240 1660 380 V680 Q1660 820 1520 820 H400 Q260 820 260 680
+V380 Q260 240 400 240 Z` (240 to 820 tall: labels under the bottom row wrap to two lines
+and still clear a footer at y 1000 by 50 px). The token's path samples the four corners, so it never cuts them:
 
 ```js
 const qb = (p0, c, p1, n) => { const out = []; for (let i = 1; i <= n; i++) { const u = i / n, a = (1 - u) * (1 - u), b = 2 * (1 - u) * u, d = u * u; out.push([a * p0[0] + b * c[0] + d * p1[0], a * p0[1] + b * c[1] + d * p1[1]]); } return out; };
-const LOOP = [[400, 260], [1520, 260], ...qb([1520, 260], [1660, 260], [1660, 400], 10), [1660, 720], ...qb([1660, 720], [1660, 860], [1520, 860], 10), [400, 860], ...qb([400, 860], [260, 860], [260, 720], 10), [260, 400], ...qb([260, 400], [260, 260], [400, 260], 10)];
+const LOOP = [[400, 240], [1520, 240], ...qb([1520, 240], [1660, 240], [1660, 380], 10), [1660, 680], ...qb([1660, 680], [1660, 820], [1520, 820], 10), [400, 820], ...qb([400, 820], [260, 820], [260, 680], 10), [260, 380], ...qb([260, 380], [260, 240], [400, 240], 10)];
 ```
 
 Eight stations on the straight stretches, each a 22 px circle with a 10 px dot that turns
-accent once passed; labels outside the track (above the top row at y 140, below the bottom
-row at y 900, beside the sides), 28 px title and 22 px line; one card in the middle (560,
-430, 800, 210) with the rule the loop obeys. The token completes the loop in about 13
-seconds (`q = seg(t, 2, 15)`), then everything stays lit for the hold. Compute each
-station's fraction by projecting its point onto the polyline rather than typing numbers.
+accent once passed; labels outside the track (above the top row at y 130, below the bottom
+row at y 850, beside the sides at x 10 and 1700, 210 wide), 28 px title and 22 px line; one
+card in the middle (560, 425, 800, 210) with the rule the loop obeys. The token completes
+the first lap in about 13 seconds and then keeps circling at the same pace until the cut
+(`lap = (t - Q0) / (Q1 - Q0); q = t < Q0 ? 0 : lap - Math.floor(lap)`): a token that
+stops dead in a corner reads as a glitch, and a loop that keeps turning is the point. Compute each
+station's fraction once at init with `W.fracOf(LOOP, point)` from `world.md` and keep it
+in the scene's state (a station is lit when `q >= frac`); never read a position back from
+the DOM in render.
 
 ## 5. Product screen with callouts and leaders
 
@@ -142,11 +153,27 @@ groups. Drive the interaction from a table of moments:
 
 ```js
 const T = { live: 3.0, end: 12.0, editor: 13.0, confirm: 15.5, gen: 17.5, draft: 21.0 };
-// camera: whole window until 4.5, push to the working panel 4.5–6.0, hold, pan to the result panel 17.2–18.8, hold
+// camera: whole window until 4.5 (the establishing view a presenter needs), push to the working panel 4.5–6.0,
+// hold, pan to the result panel 17.2–18.8, hold. Z comes from the product's smallest UI text: 24 / px, so a
+// 15 px body wants 1.6 and 12.5 px notes 1.9; the example below is for a 16 px product.
 const a = eio(seg(t, 4.5, 6.0)), b = eio(seg(t, 17.2, 18.8));
-let cx = lerp(960, 930, a), cy = lerp(540, 520, a), z = lerp(1, 1.45, a);
+let cx = lerp(960, 930, a), cy = lerp(540, 520, a), z = lerp(1, 1.5, a);
 cx = lerp(cx, 1300, b); cy = lerp(cy, 500, b); z = lerp(z, 1.5, b) + 0.012 * seg(t, 18.8, 29);
 W.cam(this.cam, cx, cy, z);
+```
+
+A real page is usually taller than the 900 px window (three sections of a control panel
+run to about 2200 px). Measure each section's real height before fixing the next one's
+top (count its rows, inputs, hints and buttons with the proportion rule, or render it once
+with `scripts/preview.py`): a section top typed from a guess puts one section's buttons
+over the next section's heading, and the camera then frames the overlap for ten seconds. The runner refuses scrolled elements, so the page does not scroll:
+its main column moves by a transform, with the section tops fixed at init so the offsets
+are known, and the camera pans in window space while the column slides under it:
+
+```js
+const TOP = { setup: 0, run: 760, results: 1520 };           // section tops in page px, fixed at init
+const sy = lerp(TOP.setup, TOP.run, eio(seg(t, 12.6, 14.0)));  // the pan: one section top to the next
+this.col.style.transform = 'translateY(' + (-sy).toFixed(1) + 'px)';   // the column slides; the camera stays on the window
 ```
 
 Typing with a provisional tail (two `<p>` elements in one `.words` group: the confirmed
@@ -159,8 +186,8 @@ const txt = streamed(TEXT, t, T.live, 17), ws = txt ? txt.split(' ') : [];   // 
 const cut = live ? Math.max(0, ws.length - 3) : ws.length;                   // the last three words stay provisional while live
 this.fin.textContent = ws.slice(0, cut).join(' ');
 this.part.textContent = ws.slice(cut).join(' ');
-const flash = (el, tp) => { const f = 1 - seg(t, tp, tp + 0.7); el.style.background = f > 0 ? 'color-mix(in srgb, var(--accent) ' + Math.round(f * 100) + '%, var(--dark))' : 'var(--dark)'; };
-flash(this.okButton, T.confirm);                                             // a press is a flash that decays
+const flash = (el, tp) => { const f = t < tp ? 0 : 1 - seg(t, tp, tp + 0.7); el.style.background = f > 0 ? 'color-mix(in srgb, var(--accent) ' + Math.round(f * 100) + '%, var(--dark))' : 'var(--dark)'; };
+flash(this.okButton, T.confirm);                                             // a press is a flash that decays; before tp it must be 0, or the button sits lit from the start
 const confirmed = t >= T.confirm + 0.4;
 this.chip.textContent = confirmed ? 'Confirmed' : 'Transcribed';            // a state chip flips text and color at the moment
 this.chip.style.background = confirmed ? 'var(--accent)' : 'var(--lav)';

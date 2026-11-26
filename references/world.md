@@ -12,7 +12,7 @@ offer palettes). Everything else is a mix of those four.
 
 ```css
 #stage { --ground:#F5F5F7; --main:#2E5E8C; --second:#16213E; --accent:#E8742C; color:var(--second); font-family:var(--sans, system-ui, sans-serif);
-  --card:var(--ground); --hair:color-mix(in srgb, var(--second) 16%, transparent); --shade:color-mix(in srgb, var(--second) 10%, transparent); --ink2:color-mix(in srgb, var(--second) 62%, var(--ground));
+  --card:var(--ground); --hair:color-mix(in srgb, var(--second) 16%, transparent); --shade:color-mix(in srgb, var(--second) 10%, transparent); --ink2:color-mix(in srgb, var(--second) 66%, var(--ground));
   --tint:color-mix(in srgb, var(--main) 10%, var(--ground)); --tint2:color-mix(in srgb, var(--main) 24%, var(--ground)); --lav:color-mix(in srgb, var(--main) 50%, var(--ground));
   --dark:var(--second); --dark2:color-mix(in srgb, var(--second) 80%, var(--main)); --dark3:color-mix(in srgb, var(--second) 88%, var(--ground)); --dark-hair:color-mix(in srgb, var(--ground) 22%, transparent); --dark-ink2:color-mix(in srgb, var(--ground) 62%, var(--second));
   --glow:color-mix(in srgb, var(--accent) 28%, transparent) }
@@ -38,7 +38,8 @@ tints the field behind it with `.air` (ground mixed 6% toward main), so cards fl
 faintly colored field. If the brand ground is a mid grey or darker, that is not enough:
 set `.air` darker (12 to 18% toward main) or make `--card` the lightest of the four
 colors, until a card stands out at a glance. Check the contrast of `--ink2` on `--card`
-(4.5 to 1 at least) whenever you change either.
+(4.5 to 1 at least) whenever you change either; 66% of the ink is the safe default, 62%
+sits on the limit with a light ink.
 
 ## shared.js
 
@@ -55,6 +56,19 @@ window.W = {
       d -= segs[i];
     }
     return pts[pts.length - 1];
+  },
+  // fraction of a polyline at which a point lies (nearest point on the polyline); computed once at init for a loop station
+  fracOf(pts, p) {
+    let best = 0, bestD = Infinity, L = 0, acc = 0;
+    for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    for (let i = 1; i < pts.length; i++) {
+      const ax = pts[i - 1][0], ay = pts[i - 1][1], bx = pts[i][0], by = pts[i][1], dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1;
+      const u = Math.max(0, Math.min(1, ((p[0] - ax) * dx + (p[1] - ay) * dy) / (len * len)));
+      const d = Math.hypot(ax + dx * u - p[0], ay + dy * u - p[1]);
+      if (d < bestD) { bestD = d; best = (acc + len * u) / L; }
+      acc += len;
+    }
+    return best;
   },
   // camera on a .cam layer: (cx, cy) lands at stage center, z is the zoom
   cam(el, cx, cy, z) { el.style.transform = 'translate(' + (960 - cx * z).toFixed(2) + 'px,' + (540 - cy * z).toFixed(2) + 'px) scale(' + z.toFixed(4) + ')'; },
@@ -114,3 +128,28 @@ window.W = {
   for opacity and `lerp(22, 0, a)` for a small slide; an arrival light is
   `Math.max(0, 1 - Math.abs(t - (t0 + 0.7)) / 1.6)` on `.lit`.
 - Markup in single quotes, `style="…"` in double quotes, no quotes inside a style.
+- SVG groups are positioned and animated with the `transform` attribute only; CSS
+  `style.transform` on a group overrides the attribute and drops the drawing at (0,0).
+  HTML `.words` blocks take `style.transform`.
+
+## Connection variants
+
+One style per film. Replace `rail` and `signal` in the kit with one of these pairs when
+the user asks; nothing else changes, because every scene calls the same two functions.
+
+```js
+// dashed rail (a tentative or optional link)
+rail(cls, pts) { return '<path class="' + cls + '" d="M' + pts.map((p) => p.join(' ')).join(' L') + '" style="fill:none;stroke:var(--tint2);stroke-width:6;stroke-linecap:round;stroke-dasharray:14 14"/>'; },
+// rail with an arrowhead at its end (define the marker once, in the first scene's svg: <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--tint2)"/></marker></defs>)
+rail(cls, pts) { return '<path class="' + cls + '" d="M' + pts.map((p) => p.join(' ')).join(' L') + '" marker-end="url(#arrow)" style="fill:none;stroke:var(--tint2);stroke-width:6;stroke-linecap:round"/>'; },
+// comet: the dot with a fading tail; the scene sets the tail's direction with rotate(angle) in the same transform
+signal(cls) { return '<g class="' + cls + '"><path d="M0 0 L-70 -7 L-70 7 Z" style="fill:var(--glow)"/><circle r="30" style="fill:var(--glow)"/><circle r="12" style="fill:var(--accent)"/></g>'; },
+// pulse: no dot; the rail itself lights from start to end (set stroke-dashoffset from q in render: offset = length * (1 - q))
+signal(cls) { return '<g class="' + cls + '"></g>'; },
+// nothing travels: rails simply appear; keep signal() returning an empty group so scenes still find it
+```
+
+With arrowheads, every rail in the film carries one; with the pulse or nothing, the scene's
+rail-lighting code (`x.el.style.opacity = eo(seg(t, t1 - 1.0, t1 - 0.6))`) is what marks
+the beat. The user's choice goes in the reply in one line ("connections: dashed rails,
+comet signal").
