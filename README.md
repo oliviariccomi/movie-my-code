@@ -1,14 +1,14 @@
 # movie-my-code
 
-I needed to present a prototype to management and didn't want to make slides. So I wrote a skill that gets Claude to turn a project into a short film: the first half shows what the thing does and how the work flows through it, the second half shows how it was built (which agents, which rules and hooks, how changes get reviewed), if that's a story worth telling. The film is a Motion artifact, so you can comment on it like a doc and have Claude fix the exact scene you point at. The Export button on the film gives you an MP4.
+A Claude skill that turns a software project into a short narrated film. The first half shows what the thing does and how the work flows through it; the second half shows how it was built (which agents, which rules and hooks, how changes get reviewed), when that's a story worth telling. The film is a Motion artifact, so it can be commented on like a document and Claude fixes the exact scene you point at. The Export button on the film gives you an MP4.
 
 ![movie-my-code: from a repo or its docs to a narrated film, one scene at a time](docs/demo.gif)
 
-You can feed it documents, a repo, or both. Any language or stack. The result is meant to be talked over live, not watched in silence: one idea per scene, plain words a manager can repeat, boxes that fit their text, and nothing on screen that isn't true of the project.
+It works from documents, from a repo, or both, in any language or stack. The result is meant to be talked over live, not watched in silence: one idea per scene, plain words a manager can repeat, boxes that fit their text, and nothing on screen that isn't true of the project.
 
 ## What comes out
 
-A 1920 x 1080 film, usually 12 to 16 scenes and 4 to 5 minutes (the type caps it at 299 seconds). All the scenes share one look: paper cards on a tinted background, thin rails between them, one accent-coloured dot that travels the rails, and a dark window whenever something is a screen. The scenes are built from a handful of layouts that I know work at this size: a numbered flow with small animated icons, cards in a row, a ladder, a loop, the real product screen with callouts, a list of lessons, a title card and an end card.
+A 1920 x 1080 film, usually 12 to 16 scenes and 4 to 5 minutes (the type caps it at 299 seconds). All the scenes share one look: paper cards on a tinted background, thin rails between them, one accent-coloured dot that travels the rails, and a dark window whenever something is a screen. The scenes are built from a handful of layouts that are known to work at this size: a numbered flow with small animated icons, cards in a row, a ladder, a loop, the real product screen with callouts, a list of lessons, a title card and an end card.
 
 ## What you need
 
@@ -22,7 +22,7 @@ Claude with the Motion artifact type, which means the Claude app on web or deskt
 
 ## How to ask for a film
 
-There's no config file. The settings are the sentences in your request. Here's the request I use for testing, for a made-up project called Inbox Triage. Each line sets one thing; swap in your own.
+There's no config file. The settings are the sentences in your request. Here's the request used for testing, for a made-up project called Inbox Triage. Each line sets one thing; swap in your own.
 
 ```text
 Make a video presenting our project "Inbox Triage" to the leadership team.          (1) project and audience
@@ -59,11 +59,11 @@ Connections: <plain lines | dashed | arrows>, <traveling dot | comet | pulse | n
 
 Something will be. Two ways to get it fixed.
 
-The one I use most: open the film, pause where the problem is, click on it and write a comment the way you'd write it to a colleague. "This scene is too fast." "Why does the dot stop here?" "This box covers text." "Remove the name." The comment carries the time and the spot in the frame. Claude works out which scene that is (by adding up the `dur` values), finds the element, changes that and nothing else, and answers in the thread in whatever language you wrote. If the fix moves or retimes a scene, the anchors of any later comments shift too; the reply will say so.
+The quickest: open the film, pause where the problem is, click on it and write a comment the way you'd write it to a colleague. "This scene is too fast." "Why does the dot stop here?" "This box covers text." "Remove the name." The comment carries the time and the spot in the frame. Claude works out which scene that is (by adding up the `dur` values), finds the element, changes that and nothing else, and answers in the thread in whatever language you wrote. If the fix moves or retimes a scene, the anchors of any later comments shift too; the reply will say so.
 
 Or just ask in chat. Better for changes that touch the whole film: "plain lines everywhere", "thirty seconds shorter", "switch to the new palette".
 
-A few things I've learned about what the fixes should be, now written into the skill. "Too fast" means a longer scene with more room between entrances, not faster motion. "Too much empty space" means bigger text, not a smaller box. "Overlapping" means the box moves to an empty area and its leader line gets re-routed. "Remove X" means X goes everywhere, and you get told where else it still shows up. "The dot stops" means the loop should keep turning until the cut. After any retiming the durations get re-added and the total trimmed back under 299 s by cutting the holds at the ends of the longest scenes, never the middles.
+The skill has its own ideas about what a fix should be, learned the hard way. "Too fast" means a longer scene with more room between entrances, not faster motion. "Too much empty space" means bigger text, not a smaller box. "Overlapping" means the box moves to an empty area and its leader line gets re-routed. "Remove X" means X goes everywhere, and you get told where else it still shows up. "The dot stops" means the loop should keep turning until the cut. After any retiming the durations get re-added and the total trimmed back under 299 s by cutting the holds at the ends of the longest scenes, never the middles.
 
 Before handing a fix back, the skill renders the changed scene outside the player (`scripts/preview.py`) and checks two things you can't see by reading code: a drawing that ended up at the top-left corner of the stage, and text sitting on top of other text. Both happened in testing. If you'd rather edit the film yourself, the table above says where each thing lives.
 
@@ -77,7 +77,7 @@ Numbers from the test runs. Each was a fresh agent with nothing but the skill, i
 | Full film from a real repo (12 Python modules, 230 KB of code and docs) | 10 scenes, 3:56 | about 355k | about 23 min, 42 tool calls |
 | One fix from a comment on the film | one scene retimed, one box moved | about 100k | about 6 min |
 
-Where it goes: roughly 35k per film on the Motion type's own instruction pages, read once; 10 to 20k per scene written; a product-screen scene costs about double a flow scene because the real interface gets rebuilt from its code. A fix should cost 30 to 60k if only `scenes.json` and the one scene get re-read, which is what the skill now says to do. Listing the whole `modules` collection dumps every scene at once (about 25k) and is only worth it when a scene is missing. The cheapest film is the one you ask for in a single message with all six lines filled in. Every open question is another round trip.
+Where it goes: roughly 35k per film on the Motion type's own instruction pages, read once; 10 to 20k per scene written; a product-screen scene costs about double a flow scene because the real interface gets rebuilt from its code. A fix should cost 30 to 60k if only `scenes.json` and the one scene get re-read, which is what the skill now says to do. Listing the whole `modules` collection dumps every scene at once (about 25k) and is only worth it when a scene is missing. The cheapest film is the one asked for in a single message with all six lines filled in. Every open question is another round trip.
 
 ## What's in here
 
@@ -94,7 +94,7 @@ movie-my-code/
 
 ## How it was tested
 
-The two cases under `evals/` were run by fresh agents that only had the skill. One built a whole film for a made-up project from a short description, the other applied a fix from a comment anchored at a time on the film. Both passed their graders. Then I pointed it at a real repo of mine, a small Python job-search agent with no agent tooling and no measured numbers, and asked for a film in Italian for people who aren't engineers. The agent read the repo in the order the skill gives, dropped the second half and the numbers scene on its own, rebuilt the project's control panel from its page code, and labelled the example data on screen. It also came back with 24 notes on things in the skill that were unclear or contradicted the Motion type's own pages. Those are all folded into this version. If you have Claude Code, `claude plugin eval` runs the two cases.
+The two cases under `evals/` were run by fresh agents that only had the skill. One built a whole film for a made-up project from a short description, the other applied a fix from a comment anchored at a time on the film. Both passed their graders. A third run pointed the skill at a real repo, a small Python job-search agent with no agent tooling and no measured numbers, and asked for a film in Italian for people who aren't engineers. The agent read the repo in the order the skill gives, dropped the second half and the numbers scene on its own, rebuilt the project's control panel from its page code, and labelled the example data on screen. It also came back with 24 notes on things in the skill that were unclear or contradicted the Motion type's own pages. Those are all folded into this version. With Claude Code, `claude plugin eval` runs the two cases.
 
 ## License
 
