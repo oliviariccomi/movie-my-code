@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: revise-from-anchored-comment
+expected_outcome: |
+  The anchor at 107 s is mapped by summing durations to the screen scene (90 to 119 s), at about 17 s into it;
+  the element is identified as a callout; the fix moves the callout to an empty area, re-routes its leader
+  through a gutter, and extends its visible window (longer t1 or a longer scene with the total kept under the cap),
+  rather than shrinking the text; the reply is written for the comment thread in the user's words.

@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: inbox-triage-leadership-film
+expected_outcome: |
+  A Motion film is created and filled: two parts (the solution with its workflow, then how it was built),
+  every scene a sequence of single elements appearing one at a time with a fixed camera (no scrolling diagram),
+  numbered five-step flows with an icon per step, agent cards saying what each agent does well, a hooks scene,
+  management-level wording with no ticket numbers or class names in titles, only the measured numbers given in
+  the prompt (120 emails, 4 s, 0.004 USD, no urgent missed, "tested so far"), the four brand colors as the palette,
+  no score, total length under 300 s with content scenes of 20 to 30 s, and the close names the film's link
+  and that Export saves the MP4.
